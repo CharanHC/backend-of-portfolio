@@ -41,12 +41,18 @@ app.post("/api/contact", async (req, res) => {
     }
 
     const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.CONTACT_EMAIL,
-        pass: process.env.CONTACT_PASS,
-      },
-    });
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.CONTACT_EMAIL,
+    pass: process.env.CONTACT_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false,
+  },
+});
+
 
     const mailOptions = {
       from: `"Portfolio Contact" <${process.env.CONTACT_EMAIL}>`,
