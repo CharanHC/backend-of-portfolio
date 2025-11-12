@@ -34,14 +34,16 @@ app.post("/api/contact", async (req, res) => {
       return res.status(400).json({ success: false, error: "Missing fields" });
     }
 
-    const transporter = nodemailer.createTransport({
+  const transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
-  port: 587,
+  port: 465,
+  secure: true, // ✅ SSL enabled (required for Render)
   auth: {
-    user: process.env.BREVO_USER,  // <-- Brevo Login
-    pass: process.env.BREVO_PASS,  // <-- Brevo SMTP Password
+    user: process.env.BREVO_USER,
+    pass: process.env.BREVO_PASS,
   },
 });
+
 
 
     // ✅ Send mail to YOU
