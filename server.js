@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-
+import fetch from "node-fetch";  // ✅ Needed for Brevo API
 
 dotenv.config();
 const app = express();
@@ -17,10 +17,10 @@ app.use(
 
 app.use(express.json());
 
-// Health check
+// ✅ Health check
 app.get("/", (req, res) => res.send("✅ Backend running with BREVO API"));
 
-// Contact endpoint
+// ✅ Contact endpoint (send + auto-reply)
 app.post("/api/contact", async (req, res) => {
   const { name, email, message } = req.body;
 
@@ -29,12 +29,13 @@ app.post("/api/contact", async (req, res) => {
   }
 
   try {
-    const brevoResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
+    // 1️⃣ SEND EMAIL TO YOU
+    await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
         accept: "application/json",
         "content-type": "application/json",
-        "api-key": process.env.BREVO_API_KEY, // ✅ API key used here
+        "api-key": process.env.BREVO_API_KEY,
       },
       body: JSON.stringify({
         sender: { name: "Portfolio Website", email: process.env.SENDER_EMAIL },
@@ -49,10 +50,33 @@ app.post("/api/contact", async (req, res) => {
       }),
     });
 
-    const result = await brevoResponse.json();
-    console.log("✅ Brevo API response:", result);
+    // 2️⃣ AUTO-REPLY TO USER
+    await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+        "api-key": process.env.BREVO_API_KEY,
+      },
+      body: JSON.stringify({
+        sender: { name: "Charan Portfolio", email: process.env.SENDER_EMAIL },
+        to: [{ email: email }], // ✅ Sends back to user
+        subject: "✅ Thanks for contacting me!",
+        htmlContent: `
+          <p>Hi <b>${name}</b>,</p>
+          <p>Thank you for reaching out! 🚀</p>
+          <p>I have received your message and will reply as soon as possible.</p>
+          <br>
+          <p><b>Your message was:</b></p>
+          <i>${message}</i>
+          <br><br>
+          <p>Best Regards,</p>
+          <p><b>Charan H C</b></p>
+        `,
+      }),
+    });
 
-    res.status(200).json({ success: true, message: "Email sent successfully ✅" });
+    res.status(200).json({ success: true, message: "Message + Auto-reply sent ✅" });
   } catch (error) {
     console.error("❌ Brevo API error:", error);
     res.status(500).json({ success: false, error: "Failed to send email" });
